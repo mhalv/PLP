@@ -43,7 +43,7 @@
   -- Cog Skill Level Student Metrics
   skill_scores.goal AS "Goal Score",
   skill_scores.score AS "Earned Score",
-  skill_scores.score_updated_on AS "Score Updated On",
+  skill_scores.score_updated_on::timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'US/Pacific' AS "Score Updated On",
   times_assessed.num AS "Assessed So Far",
   assessments_remaining.num AS "To Be Assessed"
 
