@@ -1,0 +1,96 @@
+SELECT
+  -- Student Info
+  sites.name AS "Site",
+  students.grade_level AS "Grade Level",
+  students.school_id AS "Student ID",
+  students.last_name AS "Student Last Name",
+  students.first_name AS "Student First Name",
+  students.email AS "Student Email",
+
+  -- Mentor Info
+  mentors.last_name AS "Mentor Last Name",
+  mentors.first_name AS "Mentor First Name",
+  mentors.email AS "Mentor Email",
+
+  -- SPED Info
+  sped_cases.id IS NOT NULL AS "Student Is Special Ed?",
+  case_managers.first_name AS "Case Manager First Name",
+  case_managers.last_name AS "Case Manager Last Name",
+
+  -- Course & Teacher Info
+  subjects.name AS "Subject",
+  courses.grade_level AS "Course Grade Level",
+  courses.name AS "Course Name",
+
+  -- Grades
+  course_assignments.target_letter_grade AS "Grade Goal",
+  course_assignments.letter_grade AS "Current Letter Grade",
+  course_assignments.overall_score AS "Overall Course Score",
+  course_assignments.power_expected_pcnt AS "Power FAs Expected %",
+
+
+  -- Course-Level Cog Skill Info
+  course_assignments.project_score AS "Cog Skill Percentage",
+  ROUND(course_assignments.raw_cog_skill_score,5) AS "Cog Skill Score",
+
+
+  -- Focus Areas: Power
+  course_assignments.power_num_mastered AS "Power FAs Mastered",
+  course_assignments.power_out_of AS "Total Power FAs in Course",
+  course_assignments.power_out_of - course_assignments.power_num_mastered AS "Power FAs Left",
+  course_assignments.power_num_behind AS "Power FAs Behind",
+  ROUND(course_assignments.power_expected,3) AS "Power FAs Expected by End of Year",
+  course_assignments.power_on_track AS "On Track to Pass All Power Focus Areas",
+
+
+  -- Focus Areas: Additional
+  course_assignments.addl_num_mastered AS "Additional FAs Mastered",
+  course_assignments.addl_out_of AS "Total Additional FAs in Course",
+  course_assignments.addl_out_of - course_assignments.addl_num_mastered AS "Additional FAs Left",
+  ROUND(course_assignments.addl_expected,3) AS "Additional FAs Expected by End of Year",
+
+
+  -- Projects
+  course_assignments.num_projects_overdue AS "Number of Projects Overdue",
+  course_assignments.num_projects_graded as "Num Projects Graded",
+  course_assignments.num_projects_ungraded as "Num Projects Ungraded",
+  course_assignments.num_projects_total AS "Total Num Projects",
+  COALESCE(course_assignments.num_projects_overdue, 0) = 0
+    AND COALESCE(course_assignments.project_score, 100) >= 85 AS "On Track for Projects"
+
+
+FROM users AS students
+  LEFT OUTER JOIN sped_cases
+    ON sped_cases.student_id = students.id
+  LEFT OUTER JOIN users AS case_managers
+    ON case_managers.id = sped_cases.teacher_id
+  LEFT OUTER JOIN users AS mentors
+    ON mentors.id = students.mentor_id
+  INNER JOIN sites
+    ON sites.id = students.site_id
+  INNER JOIN districts
+    ON districts.id = sites.district_id
+  INNER JOIN course_assignments
+    ON course_assignments.student_id = students.id
+  INNER JOIN courses
+    ON courses.id = course_assignments.course_id
+  INNER JOIN subjects
+    ON subjects.id = courses.subject_id
+
+WHERE
+  districts.id = 1 AND
+  courses.academic_year = 2015 AND
+  sites.name NOT IN ('Unknown Summit', 'SPS Demo') AND
+  students.last_leave_on > CURRENT_DATE AND
+  subjects.core = TRUE AND
+  course_assignments.visibility = 0 AND
+  courses.visibility = 0 AND
+  students.visibility = 0 AND
+  course_assignments.letter_grade = 'I'
+
+ORDER BY
+  sites.name,
+  students.grade_level,
+  students.last_name,
+  students.first_name
+;
