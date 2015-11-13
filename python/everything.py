@@ -1,3 +1,5 @@
+import sys
+
 import plp_models
 import analytics_setup
 import sites
@@ -14,6 +16,10 @@ import course_assignments
 import project_cog_skill_dimensions
 import subjects
 
+import skill_scores
+import assessments_remaining
+import times_assessed
+
 def drop_all(models, analytics_session):
     in_order = models.copy()
     in_order.reverse()
@@ -24,6 +30,10 @@ def drop_all(models, analytics_session):
 def scrape(models, plp_session, analytics_session):
     for model in models:
         model.scrape(plp_session, analytics_session)
+
+def materialize(views, analytics_session):
+    for view in views:
+        view.compute(analytics_session)
 
 if __name__ == '__main__':
     plp_session = plp_models.create_session()
@@ -45,6 +55,14 @@ if __name__ == '__main__':
         project_assignment_skill_goals,
     ]
 
+    views = [
+        skill_scores,
+        assessments_remaining,
+        times_assessed
+    ]
+
+    drop_all(views, analytics_session)
     drop_all(dimensions, analytics_session)
 
     scrape(dimensions, plp_session, analytics_session)
+    materialize(views, analytics_session)
