@@ -60,9 +60,9 @@
 
   -- Projects
   course_assignments.num_projects_overdue AS "Number of Projects Overdue",
-  course_assignments.num_projects_graded as "Num Projects Graded",
-  course_assignments.num_projects_ungraded as "Num Projects Ungraded",
-  course_assignments.num_projects_total AS "Total Num Projects",
+  course_assignments.num_projects_graded as "Number of Projects Graded",
+  course_assignments.num_projects_ungraded as "Number of Projects Ungraded",
+  course_assignments.num_projects_total AS "Total Number of Projects",
   COALESCE(course_assignments.num_projects_overdue, 0) = 0
     AND COALESCE(course_assignments.project_score, 100) >= 85 AS "On Track for Projects"
 
