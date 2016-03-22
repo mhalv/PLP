@@ -17,7 +17,7 @@
   case_managers.first_name AS "Case Manager First Name",
   case_managers.last_name AS "Case Manager Last Name",
 
-    -- Course & Teacher Info
+  -- Course & Teacher Info
   subjects.name AS "Subject",
   courses.grade_level AS "Course Grade Level",
   courses.name AS "Course Name",
@@ -72,7 +72,7 @@ FROM users AS students
     ON know_dos.id = course_know_dos.know_do_id
   LEFT OUTER JOIN assessment_takes
     ON assessment_takes.student_id = students.id AND assessment_takes.know_do_id = know_dos.id
-  INNER JOIN assessments
+  LEFT OUTER JOIN assessments
     ON assessments.id = assessment_takes.assessment_id
 
 
@@ -91,8 +91,8 @@ WHERE
   students.visibility = 0 AND
   assessment_takes.visibility = 0 AND
   know_dos.visibility = 0 AND
-  assessment_takes.taken_at >= '2015-08-17' AND   -- first day of school: 8/17/2015
-  assessment_takes.is_content_assessment = TRUE   -- Optional: Remove to include Diagnostic and Content Assessments
+  -- assessment_takes.taken_at >= '2015-08-17' AND   -- Optional: include if only want takes done during this school year (first day of school 8/17/2015)
+  assessment_takes.is_content_assessment = TRUE   -- Optional: remove to include Diagnostic and Content Assessments
 
 )
 
@@ -120,7 +120,7 @@ UNION
   case_managers.first_name AS "Case Manager First Name",
   case_managers.last_name AS "Case Manager Last Name",
 
-    -- Course & Teacher Info
+  -- Course & Teacher Info
   subjects.name AS "Subject",
   courses.grade_level AS "Course Grade Level",
   courses.name AS "Course Name",
@@ -192,7 +192,7 @@ WHERE
   students.visibility = 0 AND
   know_dos.visibility = 0 AND
 
-  (know_do_masteries.reason IS NULL OR know_do_masteries.reason != 'plp')
+  (know_do_masteries.reason IS NOT NULL AND know_do_masteries.reason != 'plp' AND know_do_masteries.reason != 'illuminate')
 )
 
 
