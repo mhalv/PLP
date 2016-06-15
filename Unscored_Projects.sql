@@ -64,12 +64,12 @@ FROM users AS students
     ON case_managers.id = sped_cases.teacher_id
   LEFT OUTER JOIN users AS mentors
     ON mentors.id = students.mentor_id
-  INNER JOIN sites
-    ON sites.id = students.site_id
-  INNER JOIN districts
-    ON districts.id = sites.district_id
   INNER JOIN course_assignments
     ON course_assignments.student_id = students.id
+  INNER JOIN sites
+    ON sites.id = course_assignments.site_id
+  INNER JOIN districts
+    ON districts.id = sites.district_id
   INNER JOIN courses
     ON courses.id = course_assignments.course_id
   INNER JOIN course_assignment_sections
