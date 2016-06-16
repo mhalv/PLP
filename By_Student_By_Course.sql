@@ -100,16 +100,17 @@ FROM users AS students
 
 
 WHERE
-  districts.id = 1 AND
-  courses.academic_year = 2016 AND
-  sites.name NOT IN ('Unknown Summit', 'SPS Demo') AND
-  students.last_leave_on > CURRENT_DATE AND
-  subjects.core = TRUE AND
-  course_assignments.visibility = 0 AND
-  section_teachers.visibility = 0 AND
-  courses.visibility = 0 AND
-  teachers.visibility = 0 AND
-  students.visibility = 0
+      districts.id = 1
+  AND courses.academic_year = 2016
+  AND sites.name NOT IN ('Unknown Summit', 'SPS Demo')
+  AND students.last_leave_on > '2016-06-01' -- Date selected near end of 2015-2016 school year. If during school year, adjust to CURRENT_DATE
+  AND subjects.core = TRUE
+  AND course_assignments.visibility = 0
+  AND section_teachers.visibility = 0
+  AND courses.visibility = 0
+  AND teachers.visibility = 0
+  AND students.visibility = 0
+
 
 ORDER BY
   sites.name,
