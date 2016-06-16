@@ -1,4 +1,14 @@
-﻿SELECT
+/*
+
+Summary:
+- Queries grades and other course-level data around focus areas and projects for 2015-2016
+
+Level of Detail:
+- By student, by course
+
+*/
+
+SELECT
 
   -- Student Info
   sites.name AS "Site",
@@ -29,18 +39,15 @@
   sections.sis_id AS "Illuminate Section ID",
   sections.name AS "Period Name",
 
-
   -- Grades
   course_assignments.target_letter_grade AS "Grade Goal",
   course_assignments.letter_grade AS "Current Letter Grade",
   course_assignments.overall_score AS "Overall Course Score",
   course_assignments.power_expected_pcnt AS "Power FAs Expected %",
 
-
   -- Course-Level Cog Skill Info
   course_assignments.project_score AS "Cog Skill Percentage",
   ROUND(course_assignments.raw_cog_skill_score,5) AS "Cog Skill Score",
-
 
   -- Focus Areas: Power
   course_assignments.power_num_mastered AS "Power FAs Mastered",
@@ -50,13 +57,11 @@
   ROUND(course_assignments.power_expected,3) AS "Power FAs Expected by End of Year",
   course_assignments.power_on_track AS "On Track to Pass All Power Focus Areas",
 
-
   -- Focus Areas: Additional
   course_assignments.addl_num_mastered AS "Additional FAs Mastered",
   course_assignments.addl_out_of AS "Total Additional FAs in Course",
   course_assignments.addl_out_of - course_assignments.addl_num_mastered AS "Additional FAs Left",
   ROUND(course_assignments.addl_expected,3) AS "Additional FAs Expected by End of Year",
-
 
   -- Projects
   course_assignments.num_projects_overdue AS "Number of Projects Overdue",
@@ -74,12 +79,12 @@ FROM users AS students
     ON case_managers.id = sped_cases.teacher_id
   LEFT OUTER JOIN users AS mentors
     ON mentors.id = students.mentor_id
-  INNER JOIN sites
-    ON sites.id = students.site_id
-  INNER JOIN districts
-    ON districts.id = sites.district_id
   INNER JOIN course_assignments
     ON course_assignments.student_id = students.id
+  INNER JOIN sites
+    ON sites.id = course_assignments.site_id
+  INNER JOIN districts
+    ON districts.id = sites.district_id
   INNER JOIN courses
     ON courses.id = course_assignments.course_id
   INNER JOIN course_assignment_sections
