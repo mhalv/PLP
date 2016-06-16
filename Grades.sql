@@ -1,7 +1,7 @@
 /*
 
 Summary:
-- Queries grades and other course-level data around focus areas and projects
+- Queries grades and other course-level data around focus areas and projects for 2015-2016
 - Similar to 'By Student By Course' query, but includes Expeditions courses and Course ID fields
 
 Level of Detail:
