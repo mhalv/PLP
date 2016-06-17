@@ -1,12 +1,13 @@
 /*
 
 Summary:
-- Queries grades and other course-level data around focus areas and projects for 2015-2016
+- Queries course-level grades and data around focus areas and projects for 2015-2016
 
 Level of Detail:
 - By student, by course
 
 */
+
 
 SELECT
 
@@ -50,26 +51,27 @@ SELECT
   ROUND(course_assignments.raw_cog_skill_score,5) AS "Cog Skill Score",
 
   -- Focus Areas: Power
-  course_assignments.power_num_mastered AS "Power FAs Mastered",
   course_assignments.power_out_of AS "Total Power FAs in Course",
+  course_assignments.power_num_mastered AS "Power FAs Mastered",
   course_assignments.power_out_of - course_assignments.power_num_mastered AS "Power FAs Left",
   course_assignments.power_num_behind AS "Power FAs Behind",
   ROUND(course_assignments.power_expected,3) AS "Power FAs Expected by End of Year",
-  course_assignments.power_on_track AS "On Track to Pass All Power Focus Areas",
+  course_assignments.power_on_track AS "On Track to Pass All Power Focus Areas?",
 
   -- Focus Areas: Additional
-  course_assignments.addl_num_mastered AS "Additional FAs Mastered",
   course_assignments.addl_out_of AS "Total Additional FAs in Course",
+  course_assignments.addl_num_mastered AS "Additional FAs Mastered",
   course_assignments.addl_out_of - course_assignments.addl_num_mastered AS "Additional FAs Left",
   ROUND(course_assignments.addl_expected,3) AS "Additional FAs Expected by End of Year",
 
   -- Projects
-  course_assignments.num_projects_overdue AS "Number of Projects Overdue",
-  course_assignments.num_projects_graded as "Number of Projects Graded",
-  course_assignments.num_projects_ungraded as "Number of Projects Ungraded",
   course_assignments.num_projects_total AS "Total Number of Projects",
+  course_assignments.num_projects_overdue AS "Number of Projects Overdue",
+  course_assignments.num_projects_graded AS "Number of Projects Graded",
+  course_assignments.num_projects_ungraded AS "Number of Projects Ungraded",
+  course_assignments.num_projects_exempted AS "Number of Projects Exempted",
   COALESCE(course_assignments.num_projects_overdue, 0) = 0
-    AND COALESCE(course_assignments.project_score, 100) >= 85 AS "On Track for Projects"
+    AND COALESCE(course_assignments.project_score, 100) >= 85 AS "On Track for Projects?"
 
 
 FROM users AS students
@@ -103,7 +105,7 @@ WHERE
       districts.id = 1
   AND courses.academic_year = 2016
   AND sites.name NOT IN ('Unknown Summit', 'SPS Demo')
-  AND students.last_leave_on > '2016-06-01' -- Date selected near end of 2015-2016 school year. If during school year, adjust to CURRENT_DATE
+  AND students.last_leave_on > '2016-06-01' -- Date selected near end of 2015-2016. If during school year, adjust to CURRENT_DATE.
   AND subjects.core = TRUE
   AND course_assignments.visibility = 0
   AND section_teachers.visibility = 0
