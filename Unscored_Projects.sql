@@ -1,10 +1,10 @@
 /*
 
 Summary:
-Queries a list of unscored projects
+Queries a list of unscored projects from academic year 2015-2016
 
 Level of Detail:
-By course, by student, by project, by cog skill dimension
+course > student > project > cog skill dimension
 
 */
 
