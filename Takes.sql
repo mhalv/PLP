@@ -1,13 +1,3 @@
-/*
-
-Summary:
-queries focus area assessment attempts 
-
-Level of Detail:
-student > course > focus area > assessment attempt
-
-*/
-
 (
   SELECT
 
@@ -25,7 +15,7 @@ student > course > focus area > assessment attempt
     mentors.email AS "Mentor Email",
 
     -- SPED Info
-    sped_cases.id IS NOT NULL AS "Student Is Special Ed?",
+    sped_cases.dbid IS NOT NULL AS "Student Is Special Ed?",
     case_managers.first_name AS "Case Manager First Name",
     case_managers.last_name AS "Case Manager Last Name",
 
@@ -45,7 +35,7 @@ student > course > focus area > assessment attempt
     assessment_takes.is_content_assessment AS "Content Assessment?",
     assessments.type AS "Assessment Type",
     course_know_dos.sequence AS "Sequence",
-    assessment_takes.taken_at::timestamp AT TIME ZONE 'UTC' AT TIME ZONE 'US/Pacific' AS "Date Taken", -- timestamp converted to Pacific time
+    CONVERT_TIMEZONE('US/Pacific', assessment_takes.taken_at) AS "Date Taken",
     assessment_takes.num_correct AS "Num Correct",
     assessment_takes.num_possible AS "Num Possible",
     (
@@ -58,57 +48,55 @@ student > course > focus area > assessment attempt
     NULL AS "Reason"
 
 
-  FROM users AS students
-    LEFT OUTER JOIN sped_cases
-      ON sped_cases.student_id = students.id
-    LEFT OUTER JOIN users AS case_managers
-      ON case_managers.id = sped_cases.teacher_id
-    LEFT OUTER JOIN users AS mentors
-      ON mentors.id = students.mentor_id
-    INNER JOIN course_assignments
-      ON course_assignments.student_id = students.id
-    INNER JOIN sites
-      ON sites.id = course_assignments.site_id  -- pulls site info for enrolled courses
-    INNER JOIN districts
-      ON districts.id = sites.district_id
-    INNER JOIN courses
-      ON courses.id = course_assignments.course_id
-    INNER JOIN course_assignment_sections
-      ON course_assignment_sections.course_assignment_id = course_assignments.id
-    INNER JOIN subjects
-      ON subjects.id = courses.subject_id
-    INNER JOIN sections
-      ON sections.id = course_assignment_sections.section_id
-    INNER JOIN section_teachers
-      ON section_teachers.section_id = sections.id
-    INNER JOIN users AS teachers
-      ON teachers.id = section_teachers.teacher_id
-    INNER JOIN course_know_dos
-      ON course_know_dos.course_id = courses.id
-    INNER JOIN know_dos
-      ON know_dos.id = course_know_dos.know_do_id
-    LEFT OUTER JOIN assessment_takes
-      ON assessment_takes.student_id = students.id AND assessment_takes.know_do_id = know_dos.id
-    LEFT OUTER JOIN assessments
-      ON assessments.id = assessment_takes.assessment_id
-
+  FROM latest_scrape_students AS students
+    LEFT OUTER JOIN latest_scrape_sped_cases AS sped_cases
+      ON sped_cases.student_id = students.dbid
+    LEFT OUTER JOIN latest_scrape_teachers AS case_managers
+      ON case_managers.dbid = sped_cases.teacher_id
+    LEFT OUTER JOIN latest_scrape_teachers AS mentors
+      ON mentors.dbid = students.mentor_id
+    INNER JOIN latest_scrape_course_assignments AS course_assignments
+      ON course_assignments.student_id = students.dbid
+    INNER JOIN latest_scrape_sites AS sites
+      ON sites.dbid = course_assignments.site_id  -- pulls site info for enrolled courses
+    INNER JOIN latest_scrape_districts AS districts
+      ON districts.dbid = sites.district_id
+    INNER JOIN latest_scrape_courses AS courses
+      ON courses.dbid = course_assignments.course_id
+    INNER JOIN latest_scrape_course_assignment_sections AS course_assignment_sections
+      ON course_assignment_sections.course_assignment_id = course_assignments.dbid
+    INNER JOIN latest_scrape_subjects AS subjects
+      ON subjects.dbid = courses.subject_id
+    INNER JOIN latest_scrape_sections AS sections
+      ON sections.dbid = course_assignment_sections.section_id
+    INNER JOIN latest_scrape_section_teachers AS section_teachers
+      ON section_teachers.section_id = sections.dbid
+    INNER JOIN latest_scrape_teachers AS teachers
+      ON teachers.dbid = section_teachers.teacher_id
+    INNER JOIN latest_scrape_course_know_dos AS course_know_dos
+      ON course_know_dos.course_id = courses.dbid
+    INNER JOIN latest_scrape_know_dos AS know_dos
+      ON know_dos.dbid = course_know_dos.know_do_id
+    LEFT OUTER JOIN latest_scrape_assessment_takes AS assessment_takes
+      ON assessment_takes.student_id = students.dbid AND assessment_takes.know_do_id = know_dos.dbid
+    LEFT OUTER JOIN scrape_assessments AS assessments --no latest_scrape_assessments
+      ON assessments.dbid = assessment_takes.assessment_id
 
   WHERE
 
-        districts.id = 1  -- 1 = Summit Public Schools
+        districts.dbid = 1  -- 1 = Summit Public Schools
     AND courses.academic_year = 2016
     AND sites.name NOT IN ('Unknown Summit', 'SPS Demo')
-    AND students.type = 'Student'
     AND students.last_leave_on > '2016-06-01' -- Date selected near end of 2015-2016. If during school year, adjust to CURRENT_DATE.
     AND subjects.core = TRUE
 
-    AND course_assignments.visibility = 0
-    AND section_teachers.visibility = 0
-    AND courses.visibility = 0
-    AND teachers.visibility = 0
-    AND students.visibility = 0
-    AND assessment_takes.visibility = 0
-    AND know_dos.visibility = 0
+    AND course_assignments.visibility = 'visible'
+    AND section_teachers.visibility = 'visible'
+    AND courses.visibility = 'visible'
+    AND teachers.visibility = 'visible'
+    AND students.visibility = 'visible'
+    AND assessment_takes.visibility = 'visible'
+    AND know_dos.visibility = 'visible'
     -- assessment_takes.taken_at >= '2015-08-17' AND   -- Optional: include if only want takes done during this school year (first day of school 8/17/2015)
     AND assessment_takes.is_content_assessment = TRUE   -- Optional: remove to include Diagnostic and Content Assessments
 
@@ -135,7 +123,7 @@ UNION
     mentors.email AS "Mentor Email",
 
     -- SPED Info
-    sped_cases.id IS NOT NULL AS "Student Is Special Ed?",
+    sped_cases.dbid IS NOT NULL AS "Student Is Special Ed?",
     case_managers.first_name AS "Case Manager First Name",
     case_managers.last_name AS "Case Manager Last Name",
 
@@ -161,53 +149,51 @@ UNION
     COALESCE (know_do_masteries.mastery = 'g', false) AS "Mastered?",
     know_do_masteries.reason AS "Reason"
 
-
-  FROM users AS students
-    LEFT OUTER JOIN sped_cases
-      ON sped_cases.student_id = students.id
-    LEFT OUTER JOIN users AS case_managers
-      ON case_managers.id = sped_cases.teacher_id
-    LEFT OUTER JOIN users AS mentors
-      ON mentors.id = students.mentor_id
-    INNER JOIN course_assignments
-      ON course_assignments.student_id = students.id
-    INNER JOIN sites
-      ON sites.id = course_assignments.site_id  -- pulls site info for enrolled courses
-    INNER JOIN districts
-      ON districts.id = sites.district_id
-    INNER JOIN courses
-      ON courses.id = course_assignments.course_id
-    INNER JOIN course_assignment_sections
-      ON course_assignment_sections.course_assignment_id = course_assignments.id
-    INNER JOIN subjects
-      ON subjects.id = courses.subject_id
-    INNER JOIN sections
-      ON sections.id = course_assignment_sections.section_id
-    INNER JOIN section_teachers
-      ON section_teachers.section_id = sections.id
-    INNER JOIN users AS teachers
-      ON teachers.id = section_teachers.teacher_id
-    INNER JOIN course_know_dos
-      ON course_know_dos.course_id = courses.id
-    INNER JOIN know_dos
-      ON know_dos.id = course_know_dos.know_do_id
-    LEFT OUTER JOIN know_do_masteries
-      ON know_do_masteries.know_do_id = know_dos.id AND know_do_masteries.student_id = students.id
+  FROM latest_scrape_students AS students
+    LEFT OUTER JOIN latest_scrape_sped_cases AS sped_cases
+      ON sped_cases.student_id = students.dbid
+    LEFT OUTER JOIN latest_scrape_teachers AS case_managers
+      ON case_managers.dbid = sped_cases.teacher_id
+    LEFT OUTER JOIN latest_scrape_teachers AS mentors
+      ON mentors.dbid = students.mentor_id
+    INNER JOIN latest_scrape_course_assignments AS course_assignments
+      ON course_assignments.student_id = students.dbid
+    INNER JOIN latest_scrape_sites AS sites
+      ON sites.dbid = course_assignments.site_id  -- pulls site info for enrolled courses
+    INNER JOIN latest_scrape_districts AS districts
+      ON districts.dbid = sites.district_id
+    INNER JOIN latest_scrape_courses AS courses
+      ON courses.dbid = course_assignments.course_id
+    INNER JOIN latest_scrape_course_assignment_sections AS course_assignment_sections
+      ON course_assignment_sections.course_assignment_id = course_assignments.dbid
+    INNER JOIN latest_scrape_subjects AS subjects
+      ON subjects.dbid = courses.subject_id
+    INNER JOIN latest_scrape_sections AS sections
+      ON sections.dbid = course_assignment_sections.section_id
+    INNER JOIN latest_scrape_section_teachers AS section_teachers
+      ON section_teachers.section_id = sections.dbid
+    INNER JOIN latest_scrape_teachers AS teachers
+      ON teachers.dbid = section_teachers.teacher_id
+    INNER JOIN latest_scrape_course_know_dos AS course_know_dos
+      ON course_know_dos.course_id = courses.dbid
+    INNER JOIN latest_scrape_know_dos AS know_dos
+      ON know_dos.dbid = course_know_dos.know_do_id
+    LEFT OUTER JOIN latest_scrape_know_do_masteries AS know_do_masteries
+      ON know_do_masteries.know_do_id = know_dos.dbid AND know_do_masteries.student_id = students.dbid
 
 
   WHERE
-        districts.id = 1  -- 1 = Summit Public Schools
-    AND courses.academic_year = 2016
+        districts.dbid = 1  -- 1 = Summit Public Schools
+    AND courses.academic_year = 2017
     AND sites.name NOT IN ('Unknown Summit', 'SPS Demo')
-    AND students.last_leave_on > '2016-06-01' -- Date selected near end of 2015-2016. If during school year, adjust to CURRENT_DATE.
+    AND students.last_leave_on > CURRENT_DATE -- Date selected near end of 2015-2016. If during school year, adjust to CURRENT_DATE.
     AND subjects.core = TRUE
-    AND students.type = 'Student'
-    AND course_assignments.visibility = 0
-    AND section_teachers.visibility = 0
-    AND courses.visibility = 0
-    AND teachers.visibility = 0
-    AND students.visibility = 0
-    AND know_dos.visibility = 0
+    AND course_assignments.visibility = 'visible'
+    AND section_teachers.visibility = 'visible'
+    AND courses.visibility = 'visible'
+    AND teachers.visibility = 'visible'
+    AND students.visibility = 'visible'
+    AND know_dos.visibility = 'visible'
     AND know_do_masteries.reason IS NOT NULL
     AND know_do_masteries.reason != 'plp'
     AND know_do_masteries.reason != 'illuminate'
